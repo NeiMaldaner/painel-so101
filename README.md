@@ -53,7 +53,7 @@ Os dados ficam em `.dados/` (calibração, exercícios, pose de repouso) e não 
 ## Relação com o robotica-so101
 
 O [inematds/robotica-so101](https://github.com/inematds/robotica-so101) é o gêmeo do SO-101 no MuJoCo (simulação).
-Este repositório é o braço real. Daqui vieram de lá: os gestos (tchau e comemorar), a ideia do comando por frases
+Este repositório é o braço real. De lá vieram: os gestos (tchau e comemorar), a ideia do comando por frases
 em português sem internet (`obedecer.py`) e as regras de segurança (velocidade e torque limitados).
 Daqui para lá: a Fase 2 do plano deles (ligar, calibrar e teleoperar) foi feita com estes braços, e os servos
 responderam como Feetech STS3215 (modelo 777) com o driver padrão do LeRobot.
@@ -64,4 +64,4 @@ Falhas e correções ficam em [FALHAS.md](FALHAS.md).
 
 - Mantenha as mãos longe do seguidor quando ele estiver com torque.
 - Em qualquer comportamento estranho: **PARAR** no painel ou desligue a fonte do seguidor.
-- Confira a tensão da fonte do líder: motores de 7,4 V não devem receber 12 V.
+- Use as fontes que vieram com o kit (aqui, 12 V nos dois braços). Kits com líder de 5 V queimam se receberem 12 V.
