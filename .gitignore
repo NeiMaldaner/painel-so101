@@ -1,0 +1,9 @@
+# ambiente local e dados da maquina
+.venv/
+.tools/
+.cache/
+.dados/
+.claude/
+__pycache__/
+*.pyc
+*.bak

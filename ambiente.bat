@@ -1,0 +1,13 @@
+@echo off
+cd /d "%~dp0"
+set "HF_HOME=%~dp0.cache\huggingface"
+set "HF_LEROBOT_HOME=%~dp0.dados\lerobot"
+set "HF_LEROBOT_CALIBRATION=%~dp0.dados\calibracao"
+set "TORCH_HOME=%~dp0.cache\torch"
+set "UV_CACHE_DIR=%~dp0.cache\uv"
+set "UV_PYTHON_INSTALL_DIR=%~dp0.tools\python"
+set "UV_PYTHON_BIN_DIR=%~dp0.tools\bin"
+set "UV_PYTHON_INSTALL_REGISTRY=0"
+set "PIP_CACHE_DIR=%~dp0.cache\pip"
+set "PYTHONUTF8=1"
+call "%~dp0.venv\Scripts\activate.bat"

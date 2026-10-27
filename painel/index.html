@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel SO-101</title>
+<style>
+  :root {
+    --bg: #f4f5f7; --card: #ffffff; --txt: #1b1f24; --sub: #5d6670; --borda: #dde1e6;
+    --pri: #2563eb; --pri-txt: #fff; --ok: #15803d; --aviso: #b45309; --perigo: #dc2626;
+    --log-bg: #0f1419; --log-txt: #d6e2ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f1216; --card: #171b21; --txt: #e6e9ed; --sub: #97a1ab; --borda: #2a3038;
+            --pri: #3b82f6; --ok: #22c55e; --aviso: #f59e0b; --perigo: #ef4444; --log-bg: #0a0d10; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--txt); }
+  header { position: sticky; top: 0; z-index: 5; background: var(--card); border-bottom: 1px solid var(--borda);
+           display: flex; align-items: center; gap: 16px; padding: 12px 20px; flex-wrap: wrap; }
+  header h1 { font-size: 18px; margin: 0; }
+  #situacao { flex: 1; color: var(--sub); min-width: 200px; }
+  #situacao b { color: var(--txt); }
+  .ponto { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--sub); margin-right: 6px; }
+  .ponto.on { background: var(--ok); animation: pulsa 1.2s infinite; }
+  @keyframes pulsa { 50% { opacity: .35; } }
+  #btnParar { background: var(--perigo); color: #fff; font-weight: 700; font-size: 16px; padding: 10px 26px; }
+  main { max-width: 1180px; margin: 0 auto; padding: 20px; display: grid; gap: 16px;
+         grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
+  section { background: var(--card); border: 1px solid var(--borda); border-radius: 12px; padding: 16px 18px; }
+  section h2 { font-size: 16px; margin: 0 0 4px; }
+  section p.d { color: var(--sub); margin: 0 0 12px; font-size: 13.5px; }
+  .largo { grid-column: 1 / -1; }
+  button { font: inherit; border: 1px solid var(--borda); background: var(--bg); color: var(--txt);
+           padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+  button.pri { background: var(--pri); color: var(--pri-txt); border-color: var(--pri); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button:hover:not(:disabled) { filter: brightness(1.08); }
+  .linha { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+  label { font-size: 13px; color: var(--sub); }
+  input, select { font: inherit; padding: 7px 9px; border: 1px solid var(--borda); border-radius: 8px;
+                  background: var(--bg); color: var(--txt); width: 110px; }
+  input.nome { width: 160px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--borda); }
+  th { color: var(--sub); font-weight: 600; }
+  .alarme { color: var(--perigo); font-weight: 600; }
+  .okc { color: var(--ok); }
+  .tabelas { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  #log { background: var(--log-bg); color: var(--log-txt); font: 12.5px/1.5 ui-monospace, Consolas, monospace;
+         padding: 12px; border-radius: 8px; height: 220px; overflow: auto; white-space: pre-wrap; margin: 0; }
+  .ex { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--borda); flex-wrap: wrap; }
+  .ex .n { flex: 1; min-width: 120px; } .ex .n small { color: var(--sub); display: block; }
+  .passos { margin: 0 0 10px; padding-left: 18px; color: var(--sub); font-size: 13.5px; }
+  .em-breve { border-style: dashed; }
+  .tag { font-size: 11px; background: var(--aviso); color: #fff; padding: 2px 7px; border-radius: 99px; vertical-align: middle; }
+  #contagem { position: fixed; inset: 0; background: rgba(0,0,0,.72); color: #fff; display: none;
+              align-items: center; justify-content: center; font-size: 160px; font-weight: 800; z-index: 20; }
+  #aviso { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--txt); color: var(--bg);
+           padding: 10px 18px; border-radius: 8px; display: none; z-index: 30; max-width: 90vw; }
+  @media (max-width: 520px) { main { padding: 12px; } header { padding: 10px 12px; } #contagem { font-size: 110px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>🦾 Painel SO-101</h1>
+  <div id="situacao"><span class="ponto" id="ponto"></span><span id="sitTxt">Carregando…</span></div>
+  <button id="btnParar" onclick="parar()">■ PARAR</button>
+</header>
+
+<main>
+  <section class="largo">
+    <h2>Testar · Diagnóstico</h2>
+    <p class="d">Lê os 12 motores sem mover nada: posição, tensão, temperatura, torque e alarmes.</p>
+    <div class="linha">
+      <button class="pri" onclick="diagnostico()" data-livre>Rodar diagnóstico</button>
+      <button onclick="acao({modo:'liberar'})" data-livre>Liberar seguidor (torque off)</button>
+    </div>
+    <div class="tabelas" id="diag"></div>
+  </section>
+
+  <section>
+    <h2>Seguir o líder</h2>
+    <p class="d">O seguidor copia ao vivo o que você faz no líder. No fim (ou no PARAR) ele volta sozinho ao repouso.</p>
+    <div class="linha"><label>Duração (s)</label><input type="number" id="segSeguir" value="300" min="5" max="1800"></div>
+    <button class="pri" onclick="acao({modo:'seguir', segundos:+segSeguir.value})" data-livre>Começar</button>
+  </section>
+
+  <section>
+    <h2>Gravar exercício</h2>
+    <p class="d">Igual ao “seguir”, mas salva os movimentos para o seguidor repetir depois sozinho.</p>
+    <div class="linha">
+      <label>Nome</label><input class="nome" id="nomeGravar" value="exercicio1">
+      <label>Duração (s)</label><input type="number" id="segGravar" value="60" min="5" max="600">
+    </div>
+    <button class="pri" onclick="gravar()" data-livre>Gravar</button>
+  </section>
+
+  <section>
+    <h2>Repouso</h2>
+    <p class="d">Leva o seguidor devagar para a posição dobrada (pulso → cotovelo → ombro). Para mudar a pose:
+      libere o seguidor, ajuste-o com a mão e clique em “Salvar pose atual”.</p>
+    <div class="linha">
+      <button class="pri" onclick="acao({modo:'repouso'})" data-livre>Ir para o repouso</button>
+      <button onclick="acao({modo:'salvar-repouso'})" data-livre>Salvar pose atual</button>
+    </div>
+    <p class="d" id="repInfo"></p>
+  </section>
+
+  <section class="largo">
+    <h2>Demonstrar · Exercícios gravados</h2>
+    <p class="d">O seguidor repete sozinho, com contagem regressiva falada. “Demonstrar” repete várias vezes seguidas.</p>
+    <div id="exs"></div>
+  </section>
+
+  <section>
+    <h2>Calibrar</h2>
+    <p class="d">Use se os braços travarem ou não acompanharem o curso todo. O torque fica desligado.</p>
+    <div class="linha"><label>Braço</label>
+      <select id="braco"><option value="seguidor">Seguidor (COM4)</option><option value="lider">Líder (COM5)</option></select>
+    </div>
+    <ol class="passos">
+      <li>Coloque cada junta no meio do curso e clique em <b>1</b>.</li>
+      <li>Clique em <b>2</b> e leve cada junta de um extremo ao outro durante 90 s.</li>
+    </ol>
+    <div class="linha">
+      <button onclick="acao({modo:'calibrar-meio', braco:braco.value})" data-livre>1 · Gravar meio</button>
+      <button class="pri" onclick="acao({modo:'calibrar-faixa', braco:braco.value, segundos:90})" data-livre>2 · Gravar curso (90 s)</button>
+    </div>
+  </section>
+
+  <section class="em-breve">
+    <h2>Treinar IA <span class="tag">em breve</span></h2>
+    <p class="d">Treinar uma política (ex.: ACT) para o braço fazer a tarefa sozinho, adaptando-se ao ambiente.
+      Precisa de câmera(s) e de um conjunto de gravações no formato LeRobot. Ainda não configurado.</p>
+    <button disabled>Treinar</button>
+  </section>
+
+  <section class="largo">
+    <h2>Registro</h2>
+    <pre id="log">—</pre>
+  </section>
+</main>
+
+<div id="contagem"></div>
+<div id="aviso"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+let rodando = false;
+
+function aviso(msg, ms = 4000) {
+  const a = $('#aviso'); a.textContent = msg; a.style.display = 'block';
+  clearTimeout(aviso.t); aviso.t = setTimeout(() => a.style.display = 'none', ms);
+}
+
+async function api(url, opts = {}) {
+  const r = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.detail || r.statusText);
+  return j;
+}
+
+async function acao(corpo) {
+  try { await api('/api/acao', { method: 'POST', body: JSON.stringify(corpo) }); atualizar(); }
+  catch (e) { aviso(e.message); }
+}
+
+async function parar() {
+  try { await api('/api/parar', { method: 'POST' }); aviso('Parando… o seguidor volta ao repouso.'); }
+  catch (e) { aviso(e.message); }
+}
+
+function falar(txt) {
+  try {
+    const u = new SpeechSynthesisUtterance(txt); u.lang = 'pt-BR'; speechSynthesis.cancel(); speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+async function contagem() {
+  const c = $('#contagem'); c.style.display = 'flex';
+  for (const [n, f] of [['3', 'três'], ['2', 'dois'], ['1', 'um']]) {
+    c.textContent = n; falar(f); await new Promise(r => setTimeout(r, 1000));
+  }
+  c.textContent = 'VAI'; falar('vai'); await new Promise(r => setTimeout(r, 500));
+  c.style.display = 'none';
+}
+
+async function gravar() {
+  const nome = $('#nomeGravar').value.trim();
+  await contagem();
+  acao({ modo: 'gravar', nome, segundos: +$('#segGravar').value });
+}
+
+async function reproduzir(nome, vezes) {
+  await contagem();
+  acao({ modo: 'reproduzir', nome, vezes });
+}
+
+async function apagar(nome) {
+  if (!confirm(`Apagar o exercício "${nome}"?`)) return;
+  try { await api('/api/exercicios/' + encodeURIComponent(nome), { method: 'DELETE' }); atualizar(); }
+  catch (e) { aviso(e.message); }
+}
+
+async function diagnostico() {
+  $('#diag').innerHTML = '<p class="d">Lendo motores…</p>';
+  try {
+    const d = await api('/api/diagnostico');
+    $('#diag').innerHTML = Object.entries(d).map(([braco, b]) => `
+      <div><h2 style="font-size:14px">${braco === 'lider' ? 'Líder' : 'Seguidor'} · ${b.porta}</h2>
+      ${b.erro ? `<p class="alarme">${b.erro}</p>` : `
+      <table><tr><th>#</th><th>Junta</th><th>Pos.</th><th>V</th><th>°C</th><th>Torque</th><th>Estado</th></tr>
+      ${b.motores.map(m => m.ok ? `<tr><td>${m.id}</td><td>${m.nome}</td><td>${m.posicao}</td><td>${m.tensao.toFixed(1)}</td>
+        <td>${m.temperatura}</td><td>${m.torque ? 'ligado' : 'solto'}</td>
+        <td class="${m.alarmes.length ? 'alarme' : 'okc'}">${m.alarmes.length ? m.alarmes.join(', ') : 'ok'}</td></tr>`
+        : `<tr><td>${m.id}</td><td>${m.nome}</td><td colspan="5" class="alarme">sem resposta</td></tr>`).join('')}
+      </table>`}</div>`).join('');
+  } catch (e) { $('#diag').innerHTML = `<p class="alarme">${e.message}</p>`; }
+}
+
+function desenharExercicios(exs) {
+  const el = $('#exs');
+  const chave = JSON.stringify(exs) + rodando;
+  if (el.dataset.chave === chave) return;
+  el.dataset.chave = chave;
+  if (!exs.length) { el.innerHTML = '<p class="d">Nenhum exercício gravado ainda.</p>'; return; }
+  el.innerHTML = exs.map(e => `
+    <div class="ex"><div class="n"><b>${e.nome}</b><small>${e.segundos} s · ${e.data}</small></div>
+      <button class="pri" onclick="reproduzir('${e.nome}',1)" ${rodando ? 'disabled' : ''}>▶ Reproduzir</button>
+      <input type="number" id="v_${e.nome}" value="3" min="2" max="50" style="width:64px" title="vezes">
+      <button onclick="reproduzir('${e.nome}', +document.getElementById('v_${e.nome}').value)" ${rodando ? 'disabled' : ''}>Demonstrar ×N</button>
+      <button onclick="apagar('${e.nome}')" ${rodando ? 'disabled' : ''}>Apagar</button>
+    </div>`).join('');
+}
+
+async function atualizar() {
+  try {
+    const e = await api('/api/estado');
+    rodando = e.rodando;
+    $('#ponto').classList.toggle('on', rodando);
+    $('#sitTxt').innerHTML = rodando
+      ? `Rodando: <b>${e.tarefa}</b> · ${e.decorrido}s`
+      : (e.tarefa ? `Livre · última tarefa: ${e.tarefa} (${e.codigo === 0 ? 'concluída' : 'terminou com erro'})` : 'Livre');
+    document.querySelectorAll('[data-livre]').forEach(b => b.disabled = rodando);
+    $('#btnParar').disabled = !rodando;
+    const log = $('#log'), embaixo = log.scrollTop + log.clientHeight >= log.scrollHeight - 10;
+    log.textContent = e.log.join('\n') || '—';
+    if (embaixo) log.scrollTop = log.scrollHeight;
+    $('#repInfo').textContent = e.repouso_personalizado ? 'Usando a pose de repouso salva por você.' : 'Usando a pose de repouso padrão.';
+    desenharExercicios(e.exercicios);
+  } catch (err) {
+    $('#sitTxt').textContent = 'Sem conexão com o servidor do painel.';
+  }
+}
+
+atualizar();
+setInterval(atualizar, 1000);
+</script>
+</body>
+</html>

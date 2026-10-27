@@ -1,0 +1,32 @@
+TELEOPERACAO SO-ARM101 - ambiente local
+
+Esta pasta contem Python 3.12 em .tools\python, ambiente .venv,
+dependencias do LeRobot e caches locais. Nao requer Conda global.
+Versao solicitada: LeRobot 0.6.1 com hardware e Feetech.
+
+Abra abrir-terminal.bat para carregar o ambiente em CMD.
+Execute listar-portas.bat para consultar as portas, sem acionar motores.
+
+Antes de calibrar ou teleoperar:
+1. Identificar qual porta pertence ao lider e qual ao seguidor.
+2. Confirmar que os IDs e baudrate dos motores ja estao configurados.
+3. Fixar as bases e liberar o espaco de movimento.
+4. Calibrar cada braco seguindo as instrucoes interativas.
+
+COMANDOS DE REFERENCIA (substituir COM_LIDER e COM_SEGUIDOR):
+
+lerobot-calibrate --teleop.type=so101_leader --teleop.port=COM_LIDER --teleop.id=lider
+
+lerobot-calibrate --robot.type=so101_follower --robot.port=COM_SEGUIDOR --robot.id=seguidor
+
+Somente depois de calibrar os dois bracos:
+lerobot-teleoperate --robot.type=so101_follower --robot.port=COM_SEGUIDOR --robot.id=seguidor --teleop.type=so101_leader --teleop.port=COM_LIDER --teleop.id=lider --display_data=false --fps=30
+
+Ctrl+C encerra a teleoperacao. Se houver movimento inesperado, desligue
+a alimentacao do seguidor. Nao force juntas com torque ativo.
+
+As calibracoes serao salvas em .dados\calibracao quando o ambiente.bat
+for carregado. Nenhum dos arquivos .bat inicia movimento automaticamente.
+
+Documentacao: https://huggingface.co/docs/lerobot/so101
+Instalacao: https://huggingface.co/docs/lerobot/installation
