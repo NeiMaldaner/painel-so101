@@ -53,6 +53,14 @@
   .ex .n { flex: 1; min-width: 120px; } .ex .n small { color: var(--sub); display: block; }
   .passos { margin: 0 0 10px; padding-left: 18px; color: var(--sub); font-size: 13.5px; }
   .em-breve { border-style: dashed; }
+  .chave { display: flex; align-items: center; gap: 6px; color: var(--txt); font-size: 14px; cursor: pointer; }
+  .chave input { width: 18px; height: 18px; }
+  #frase { flex: 1; width: auto; min-width: 180px; }
+  #resposta { margin: 8px 0 0; min-height: 22px; font-weight: 600; }
+  .dicas { color: var(--sub); font-size: 12.5px; margin-top: 8px; }
+  .dicas code { background: var(--bg); padding: 1px 5px; border-radius: 4px; cursor: pointer; }
+  .gestos { display: flex; gap: 8px; flex-wrap: wrap; }
+  .gestos button { font-size: 15px; padding: 10px 16px; }
   .tag { font-size: 11px; background: var(--aviso); color: #fff; padding: 2px 7px; border-radius: 99px; vertical-align: middle; }
   #contagem { position: fixed; inset: 0; background: rgba(0,0,0,.72); color: #fff; display: none;
               align-items: center; justify-content: center; font-size: 160px; font-weight: 800; z-index: 20; }
@@ -65,6 +73,8 @@
 <header>
   <h1>🦾 Painel SO-101</h1>
   <div id="situacao"><span class="ponto" id="ponto"></span><span id="sitTxt">Carregando…</span></div>
+  <label class="chave" title="Mais devagar, passo menor e torque limitado a 60%">
+    <input type="checkbox" id="cuidadoso" onchange="salvarCuidadoso()"> Modo cuidadoso</label>
   <button id="btnParar" onclick="parar()">■ PARAR</button>
 </header>
 
@@ -77,6 +87,31 @@
       <button onclick="acao({modo:'liberar'})" data-livre>Liberar seguidor (torque off)</button>
     </div>
     <div class="tabelas" id="diag"></div>
+  </section>
+
+  <section class="largo">
+    <h2>Fale com o robô</h2>
+    <p class="d">Escreva (ou fale, no 🎤) o que o seguidor deve fazer. Entende frases simples em português, sem internet.</p>
+    <div class="linha">
+      <input id="frase" placeholder="ex.: dá tchau · repete o primeiro 3 vezes · vai para o repouso"
+             onkeydown="if(event.key==='Enter') enviarFrase()">
+      <button class="pri" onclick="enviarFrase()">Enviar</button>
+      <button id="btnMic" onclick="ouvir()" title="Falar (Chrome/Edge)">🎤</button>
+    </div>
+    <p id="resposta"></p>
+    <div class="dicas">Exemplos:
+      <code>dá tchau</code> <code>comemora</code> <code>segue o que eu fizer por 2 min</code>
+      <code>grava um exercício chamado onda por 30 segundos</code> <code>repete o primeiro 2 vezes</code>
+      <code>vai para o repouso</code> <code>solta o braço</code> <code>como você está?</code> <code>para</code></div>
+  </section>
+
+  <section>
+    <h2>Gestos</h2>
+    <p class="d">Movimentos prontos. O seguidor levanta até o meio do curso, faz o gesto e volta ao repouso.</p>
+    <div class="gestos">
+      <button class="pri" onclick="acao({modo:'gesto', nome:'tchau'})" data-livre>👋 Dar tchau</button>
+      <button class="pri" onclick="acao({modo:'gesto', nome:'comemorar'})" data-livre>🎉 Comemorar</button>
+    </div>
   </section>
 
   <section>
@@ -203,6 +238,42 @@ async function apagar(nome) {
   catch (e) { aviso(e.message); }
 }
 
+async function enviarFrase(texto) {
+  const campo = $('#frase');
+  const t = (texto ?? campo.value).trim();
+  if (!t) return;
+  try {
+    const r = await api('/api/comando', { method: 'POST', body: JSON.stringify({ texto: t }) });
+    $('#resposta').textContent = '🤖 ' + r.resposta;
+    falar(r.resposta.replace(/[“”"]/g, ''));
+    if (r.acao && r.acao.modo === 'diagnostico') diagnostico();
+    campo.value = '';
+    atualizar();
+  } catch (e) { $('#resposta').textContent = '⚠️ ' + e.message; }
+}
+
+function ouvir() {
+  const R = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!R) { aviso('Este navegador não reconhece voz. Use o Chrome ou o Edge.'); return; }
+  const rec = new R(); rec.lang = 'pt-BR'; rec.interimResults = false;
+  $('#btnMic').textContent = '⏺';
+  rec.onresult = ev => { const t = ev.results[0][0].transcript; $('#frase').value = t; enviarFrase(t); };
+  rec.onerror = ev => aviso('Não ouvi: ' + ev.error);
+  rec.onend = () => $('#btnMic').textContent = '🎤';
+  rec.start();
+}
+
+async function salvarCuidadoso() {
+  try {
+    const r = await api('/api/config', { method: 'POST', body: JSON.stringify({ cuidadoso: $('#cuidadoso').checked }) });
+    aviso(r.cuidadoso ? 'Modo cuidadoso ligado: vale a partir da próxima tarefa.' : 'Modo cuidadoso desligado.');
+  } catch (e) { aviso(e.message); }
+}
+
+document.addEventListener('click', ev => {
+  if (ev.target.matches('.dicas code')) { $('#frase').value = ev.target.textContent; $('#frase').focus(); }
+});
+
 async function diagnostico() {
   $('#diag').innerHTML = '<p class="d">Lendo motores…</p>';
   try {
@@ -247,6 +318,7 @@ async function atualizar() {
     const log = $('#log'), embaixo = log.scrollTop + log.clientHeight >= log.scrollHeight - 10;
     log.textContent = e.log.join('\n') || '—';
     if (embaixo) log.scrollTop = log.scrollHeight;
+    if (document.activeElement !== $('#cuidadoso')) $('#cuidadoso').checked = e.cuidadoso;
     $('#repInfo').textContent = e.repouso_personalizado ? 'Usando a pose de repouso salva por você.' : 'Usando a pose de repouso padrão.';
     desenharExercicios(e.exercicios);
   } catch (err) {

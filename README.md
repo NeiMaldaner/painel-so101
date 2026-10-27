@@ -8,6 +8,9 @@ Roda **no seu PC** (precisa do USB dos braços) e abre no navegador em `http://1
 
 | Serviço | O que faz |
 |---|---|
+| **Fale com o robô** | Comando por texto ou voz em português, sem internet: "dá tchau", "repete o primeiro 3 vezes", "vai para o repouso", "para". |
+| **Gestos** | Prontos: 👋 dar tchau e 🎉 comemorar. |
+| **Modo cuidadoso** | Chave no topo: metade da velocidade, passo menor e torque limitado a 60%. |
 | **Testar · Diagnóstico** | Lê os 12 motores sem mover nada: posição, tensão, temperatura, torque e alarmes (ex.: sobrecarga). |
 | **Seguir o líder** | Teleoperação: o seguidor copia o líder ao vivo. |
 | **Gravar exercício** | Grava os movimentos do líder com um nome. |
@@ -46,6 +49,16 @@ Os dados ficam em `.dados/` (calibração, exercícios, pose de repouso) e não 
 - **Use a escala por faixa (`use_degrees=false`)** quando os cursos do líder e do seguidor forem diferentes. Em graus, o mesmo ângulo cai em posições físicas diferentes.
 - **`max_relative_target` muito baixo (ex.: 2) impede o ombro e o cotovelo de vencer a gravidade.** Use 10 (e escreva `10.0`, porque o LeRobot recusa inteiro).
 - **Não feche a garra 100%:** apertar o batente dispara a proteção de sobrecarga (status 32). O painel limita a garra a 8%.
+
+## Relação com o robotica-so101
+
+O [inematds/robotica-so101](https://github.com/inematds/robotica-so101) é o gêmeo do SO-101 no MuJoCo (simulação).
+Este repositório é o braço real. Daqui vieram de lá: os gestos (tchau e comemorar), a ideia do comando por frases
+em português sem internet (`obedecer.py`) e as regras de segurança (velocidade e torque limitados).
+Daqui para lá: a Fase 2 do plano deles (ligar, calibrar e teleoperar) foi feita com estes braços, e os servos
+responderam como Feetech STS3215 (modelo 777) com o driver padrão do LeRobot.
+
+Falhas e correções ficam em [FALHAS.md](FALHAS.md).
 
 ## Segurança
 
