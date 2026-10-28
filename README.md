@@ -24,9 +24,9 @@ O botão **PARAR** fica sempre visível: interrompe a tarefa e o seguidor volta 
 
 ## Como usar
 
-1. Ambiente: Python 3.12 em `.venv` com `pip install -r requirements.txt`.
-2. Ajuste as portas se precisar (padrão: seguidor `COM4`, líder `COM5`).
-3. Calibre os dois braços (pelo painel ou `calibrar.bat`).
+1. Instale o [Python 3.12](https://www.python.org/downloads/) e dê dois cliques em **`instalar.bat`** (uma vez só).
+2. Ajuste as portas se precisar (padrão: seguidor `COM4`, líder `COM5`). Num PC novo a porta pode mudar: veja com `listar-portas.bat`.
+3. A calibração destes braços e os exercícios gravados já vêm no repositório (`.dados/calibracao` e `.dados/exercicios`). Para outros braços, calibre de novo (pelo painel ou `calibrar.bat`).
 4. Dê dois cliques em **`painel.bat`**.
 
 ## Arquivos
@@ -41,7 +41,7 @@ O botão **PARAR** fica sempre visível: interrompe a tarefa e o seguidor volta 
 | `preparar-seguidor.py` | Faz o seguidor segurar a posição atual antes de ligar o torque, sem pulos. |
 | `teleoperar.bat`, `calibrar.bat` | Atalhos de linha de comando. |
 
-Os dados ficam em `.dados/` (calibração, exercícios, pose de repouso) e não vão para o git.
+Os dados ficam em `.dados/`. Calibração, exercícios e pose de repouso vão para o git; diagnósticos e backups ficam só na máquina.
 
 ## Lições aprendidas (vale para outros SO-101)
 

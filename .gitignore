@@ -2,7 +2,10 @@
 .venv/
 .tools/
 .cache/
-.dados/
+.dados/*
+!.dados/calibracao/
+!.dados/exercicios/
+!.dados/repouso.json
 .claude/
 __pycache__/
 *.pyc
